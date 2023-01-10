@@ -1,0 +1,148 @@
+---
+title: "Assignment_3.2_Vayuvegula_Soma_Shekar"
+author: "Soma Shekar Vayuvegula"
+date: "12/18/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Importing Data to Dataframe and displaying details of Dataframe
+
+```{r RDataLoad, echo=FALSE,include=FALSE}
+# Loading Libraries
+library(car) #linear regression
+library(lattice) # graphics 
+library(ggplot2) # graphics 
+#set directory
+setwd("/Users/somashekarvayuvegula/Documents/Workspace/Predictive_Analytics/Week3")
+df_dodgers<-read.csv("dodgers-2022.csv")
+```
+
+Head of the dataframe
+
+```{r RHead,echo=FALSE}
+head(df_dodgers)
+```
+
+Summary of the dataframe
+
+```{r RSum,echo=FALSE}
+summary(df_dodgers)
+```
+
+Dimension of the dataframe
+
+```{r RDim,echo=FALSE}
+dim(df_dodgers)
+```
+
+Structure of the dataframe
+
+```{r RStr,echo=FALSE}
+str(df_dodgers)
+```
+
+## Box plots
+
+```{r Rplot, echo=FALSE}
+df_dodgers$day_of_week<-factor(df_dodgers$day_of_week,levels=c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+df_dodgers$month<-factor(df_dodgers$month,levels=c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"))
+```
+
+```{r Rplot1, echo=FALSE}
+## Day of weekdays
+ggplot(df_dodgers,aes(x=day_of_week,y=attend))+geom_boxplot()+ggtitle("Weekdays Attendance")+
+                  xlab("Days of week")+ylab("Attendance")
+```
+
+## Observations:
+
+As per the above Box plot, Tuedays have the maximum attendance and Mondays have the lowest attendance
+
+```{r Rplot2, echo=FALSE}
+## Day night attendance
+ggplot(df_dodgers,aes(x=day_night,y=attend))+geom_boxplot()+ggtitle("Day night Attendance")+
+  xlab("Day or night")+ylab("Attendance")
+```
+
+## Observations:
+
+As per the above Box plot, there is not big difference in attendance either it is Day or Night.
+
+```{r Rplot3, echo=FALSE}
+## Attendance per month
+plot(df_dodgers$month,df_dodgers$attend,main="Attendance per Month",xlab="Month",ylab="Attendance",las=1)
+```
+
+## Observations:
+
+As per the above Box plot, Month of June has the maximum attendance and Month of October has the lowest attendance. My assumption is as June and July is the holiday season for students, we are having maximum attendance is June.
+
+
+```{r Rplot4, echo=FALSE}
+## Attendance per match against an opponent
+ggplot(df_dodgers,aes(x=opponent,y=attend))+geom_boxplot()+
+  ggtitle("Attendance By Opponent")+xlab("Opponent")+ylab("Attendance")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+## Observations:
+
+As per the above Box plot,Match against opponents Angels, Mets, Nationals and White Sox has maximum attendance compared to others.
+
+## Scatter Plots:
+
+```{r Rplot5, echo=FALSE}
+## Attendance by weather
+ggplot(df_dodgers,aes(x=month,y=attend,color=fireworks))+geom_point()+facet_wrap(day_night~skies)+
+  ggtitle("Attendance By Weather")+xlab("Month")+ylab("Attendance")
+```
+
+## Observations:
+
+As per the above Box plot, Nights with clear skies have the maximum attendance. My assumption is that we are having maximum attendance after office or school hours when the weather permits.
+
+## Regression Model
+
+```{r Regression, echo=FALSE}
+#create model
+my.model <- {attend ~ month + day_of_week + bobblehead}
+#Reseed
+set.seed(1234)
+training_test <- c(rep(1, trunc((2/3)*nrow(df_dodgers))), rep(2, trunc((1/3)*nrow(df_dodgers))))
+#Sample
+df_dodgers$Training_Test <- sample(training_test)
+df_dodgers$Training_Test <- factor(df_dodgers$Training_Test, levels = c(1, 2), labels = c("TRAIN", "TEST"))
+df_dodgers.Train <- subset(df_dodgers, Training_Test == "TRAIN")
+df_dodgers.Test <- subset(df_dodgers, Training_Test == "TEST")
+#Fit model to training set
+train.model.fit <- lm(my.model, data = df_dodgers.Train)
+#Evaluate the model
+df_dodgers.Test$Predict_Attend <- predict(train.model.fit, newdata = df_dodgers.Test)
+my.model.fit <- lm(my.model, data = df_dodgers)  # use all available data
+print(summary(my.model.fit))
+
+print(round(my.model.fit$coefficients[length(my.model.fit$coefficients)], digits = 0))
+```
+
+## Conclusion:
+
+  Multiple Regression model is developed to find relationship between month, day of the week, day or night and bobble head promotion. We got relationship woth p-value of 2.083e-07.  The lower the p-value, the greater the statistical significance of the observed difference. We can run bobble head promotion to get more attendance of 10715.
+  
+  Looking at the different charts plotted above, we have more attendance:
+    
+    1. in the month of June
+    2. During nights with clear skies
+    3. on Tuesdays
+    4. and when opponents are Angels, Mets, Nationals and White Sox
+    
+ With below assumptions:
+ 
+    1. June is the holiday time for Students
+    2. During nights indicating people attending after office or school hours, 
+ 
+ I would suggest the management to run promotions during holiday times with perfect weather and having matches with major opponents during those times (Angels, Mets, Nationals and White Sox) to get maximum attendance.
+
+
